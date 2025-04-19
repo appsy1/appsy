@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor Visual - Appsy</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f8ff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      padding: 1em;
+      text-align: center;
+      font-size: 2em;
+      font-weight: bold;
+      color: transparent;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.6);
+      background-clip: text;
+      -webkit-background-clip: text;
+      font-family: 'Press Start 2P', cursive;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1em;
+    }
+
+    header img {
+      height: 40px;
+    }
+
+    #editor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      position: relative;
+    }
+
+    #sidebar {
+      width: 60px;
+      background-color: #ff7eb9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 10px;
+      transition: width 0.3s ease;
+      overflow: hidden;
+    }
+
+    .tab {
+      background-color: #ffffff10;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      margin: 6px 0;
+      padding: 12px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3em;
+      background: linear-gradient(135deg, #ff85c1, #ff6aa9);
+      transition: transform 0.2s;
+    }
+
+    .tab:hover {
+      transform: scale(1.1);
+      background: linear-gradient(135deg, #ff6aa9, #ff85c1);
+    }
+
+    #canvas-area {
+      flex: 1;
+      margin: 1em;
+      background-color: white;
+      border: 2px dashed #aaa;
+      border-radius: 10px;
+      position: relative;
+      padding: 1em;
+      display: flex;
+      gap: 1em;
+      flex-wrap: wrap;
+      align-content: flex-start;
+    }
+
+    #canvas-area img {
+      max-width: 100%;
+      height: auto;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 8px;
+      margin: 5px;
+    }
+
+    #assistant-button {
+      position: absolute;
+      bottom: 20px;
+      right: 90px;
+      background-color: #ff1493;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 2em;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease;
+    }
+
+    #assistant-button:hover {
+      transform: scale(1.1);
+    }
+
+    #microphone-button {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: #6a5acd;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 1.6em;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease;
+    }
+
+    #microphone-button:hover {
+      transform: scale(1.1);
+    }
+
+    #assistant-panel {
+      position: absolute;
+      bottom: 100px;
+      right: 20px;
+      width: 300px;
+      background: white;
+      border-radius: 10px;
+      padding: 1em;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      display: none;
+      flex-direction: column;
+      animation: fadeIn 0.3s ease forwards;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #assistant-panel p {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+
+    #assistant-panel img {
+      width: 50px;
+      align-self: center;
+      margin-bottom: 10px;
+    }
+
+    #close-assistant {
+      align-self: flex-end;
+      background: transparent;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+
+    #toolbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .toolbar-button {
+      background: #ffffff10;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.3em;
+      padding: 10px;
+      background: linear-gradient(135deg, #6a5acd, #483d8b);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+
+    .toolbar-button:hover {
+      transform: scale(1.1);
+    }
+
+    #assistant-input {
+      margin-top: 10px;
+      display: flex;
+      gap: 5px;
+    }
+
+    #assistant-input input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    #assistant-input button {
+      padding: 8px 10px;
+      background-color: #ff1493;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+</head>
+<body>
+  <header>
+    <img src="https://via.placeholder.com/40x40.png?text=A" alt="Appsy Logo" />
+    ✨ Appsy - Creador de Apps
+  </header>
+  <div id="editor-container">
+    <div id="sidebar">
+      <button class="tab" title="Seleccionar"><i class="fas fa-hand-pointer"></i></button>
+      <button class="tab" title="Agregar texto"><i class="fas fa-font"></i></button>
+      <button class="tab" title="Agregar imagen" onclick="openImageOptions()"><i class="fas fa-image"></i></button>
+    </div>
+    <div id="canvas-area"></div>
+
+    <div id="toolbar">
+      <button class="toolbar-button" onclick="goBack()" title="Regresar"><i class="fas fa-undo"></i></button>
+      <button class="toolbar-button" onclick="goForward()" title="Adelantar"><i class="fas fa-redo"></i></button>
+      <button class="toolbar-button" onclick="saveProject()" title="Guardar"><i class="fas fa-save"></i></button>
+      <button class="toolbar-button" onclick="previewProject()" title="Vista previa"><i class="fas fa-eye"></i></button>
+      <button class="toolbar-button" onclick="shareProject()" title="Compartir"><i class="fas fa-share-alt"></i></button>
+    </div>
+
+    <button id="assistant-button" onclick="toggleAssistant()"><i class="fas fa-robot"></i></button>
+    <button id="microphone-button" title="Hablar" onclick="toggleMicrophone()"><i id="microphone-icon" class="fas fa-microphone-slash"></i></button>
+    <div id="assistant-panel">
+      <button id="close-assistant" onclick="toggleAssistant()">✖️</button>
+      <img src="https://cdn-icons-png.flaticon.com/512/4712/4712104.png" alt="Asistente" />
+      <div id="assistant-conversation">
+        <p><strong>Cuéntame cuál es tu idea</strong> 💡</p>
+      </div>
+      <div id="assistant-input">
+        <input type="text" placeholder="Escribe aquí tu idea..." onkeydown="if(event.key==='Enter'){ handleAssistantText(); }">
+        <button onclick="handleAssistantText()">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let microphoneActive = false;
+
+    function toggleAssistant() {
+      const panel = document.getElementById("assistant-panel");
+      panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+    }
+
+    function toggleMicrophone() {
+      microphoneActive = !microphoneActive;
+      const icon = document.getElementById("microphone-icon");
+      icon.className = microphoneActive ? "fas fa-microphone" : "fas fa-microphone-slash";
+    }
+
+    function openImageOptions() {
+      const option = confirm("¿Quieres generar una imagen con IA? (Presiona Cancelar para subir una propia)");
+      if (option) {
+        const phrase = prompt("Escribe una frase para generar la imagen:");
+        if (phrase && phrase.trim() !== "") {
+          const img = document.createElement('img');
+          img.src = "https://image.pollinations.ai/prompt/" + encodeURIComponent(phrase);
+          document.getElementById('canvas-area').appendChild(img);
+        }
+      } else {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = function(e) {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            document.getElementById('canvas-area').appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        };
+        input.click();
+      }
+    }
+
+    function saveProject() {
+      alert("(Aquí se guardaría el proyecto localmente o en la nube)");
+    }
+
+    function previewProject() {
+      alert("(Aquí se mostraría una vista previa del proyecto)");
+    }
+
+    function shareProject() {
+      alert("(Aquí se generaría un enlace para compartir el proyecto)");
+    }
+
+    function handleAssistantText() {
+      const input = document.querySelector("#assistant-input input");
+      const message = input.value.trim();
+      if (message) {
+        const userMessage = document.createElement('p');
+        userMessage.innerHTML = "🧑‍💻 Tú: " + message;
+        document.getElementById("assistant-conversation").appendChild(userMessage);
+
+        const assistantResponse = document.createElement('p');
+        assistantResponse.innerHTML = "🤖 Appsy: " + interpretMessage(message);
+        document.getElementById("assistant-conversation").appendChild(assistantResponse);
+
+        input.value = "";
+      }
+    }
+
+    function interpretMessage(texto) {
+      texto = texto.toLowerCase();
+      if (texto.includes("imagen") || texto.includes("foto")) {
+        openImageOptions();
+        return "¡He abierto el generador de imagen para ti!";
+      } else if (texto.includes("texto")) {
+        return "Usa el botón 'T' en la barra lateral para insertar texto.";
+      } else if (texto.includes("guardar")) {
+        saveProject();
+        return "¡Tu proyecto ha sido guardado! (Simulado)";
+      } else if (texto.includes("hola") || texto.includes("ayuda") || texto.includes("idea")) {
+        return "Estoy aquí para ayudarte a crear tu app. ¿Quieres agregar texto, una imagen o algo más?";
+      } else {
+        return "Aún estoy aprendiendo, pero puedo ayudarte con imágenes, texto, guardar tu proyecto ¡y más!";
+      }
+    }
+
+    function goBack() {
+      alert("(Deshacer la última acción)");
+    }
+
+    function goForward() {
+      alert("(Rehacer la última acción)");
+    }
+  </script>
+</body>
+</html>
